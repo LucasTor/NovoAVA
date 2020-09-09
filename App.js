@@ -1,54 +1,119 @@
 import React, {Component} from 'react';
 import {WebView} from 'react-native-webview';
-import {Text, View, TouchableOpacity, StyleSheet, Image, ActivityIndicator, ToastAndroid } from 'react-native';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+  ToastAndroid,
+  Alert,
+  BackHandler,
+} from 'react-native';
 var SendIntentAndroid = require('react-native-send-intent');
 
 class MyWebComponent extends Component {
   constructor(props) {
     super(props);
+    this.WEBVIEW_REF = React.createRef();
 
     this.state = {
       loadFailed: false,
       isLoading: true,
+      backButtonEnabled: false,
     };
   }
 
   _onShouldStartLoadWithRequest = (event) => {
-    const { url } = event;
-    if (url.startsWith('intent://') && url.includes('scheme=http') && Platform.OS === 'android') {
-      SendIntentAndroid.openChromeIntent(url);
-      return false;
+    const {url} = event;
+    if (
+      url.startsWith('intent://') &&
+      url.includes('scheme=http') &&
+      Platform.OS === 'android'
+    ) {
+      Alert.alert(
+        'Este link será aberto em um aplicativo externo.',
+        'Deseja prosseguir?',
+        [
+          {
+            text: 'Sim',
+            onPress: () => {
+              SendIntentAndroid.openChromeIntent(url);
+              return false;
+            },
+          },
+          {
+            text: 'Não',
+            onPress: () => {
+              return true;
+            },
+          },
+        ],
+        {cancelable: false},
+      );
     }
     return true;
+  };
+
+  componentDidMount() {
+    ToastAndroid.show(
+      'Visite a página do projeto em github.com/LucasTor',
+      ToastAndroid.LONG,
+    );
+    BackHandler.addEventListener('hardwareBackPress', this.backHandler);
   }
 
-  componentDidMount(){
-    ToastAndroid.show("Visite a página do projeto em github.com/LucasTor", 0)
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.backHandler);
   }
+
+  backHandler = () => {
+    if (this.state.backButtonEnabled) {
+      this.WEBVIEW_REF.current.goBack();
+      return true;
+    }
+    return false;
+  };
+
+  _onNavigationStateChange = (navState) => {
+    this.setState({
+      backButtonEnabled: navState.canGoBack,
+    });
+  };
 
   render() {
-    const { loadFailed, isLoading } = this.state;
+    const {loadFailed, isLoading} = this.state;
 
     return (
-      <>  
-          {!loadFailed && (
-            <WebView
+      <>
+        {!loadFailed && (
+          <WebView
+            ref={this.WEBVIEW_REF}
             originWhitelist={['*']}
-            style={{ backgroundColor: '#EEE' }}
+            style={{backgroundColor: '#EEE'}}
             source={{uri: 'https://ava.ucs.br/'}}
-            onError={() => this.setState({ loadFailed: true, isLoading: false })}
-            onLoad={() => this.setState({ isLoading: false })}
-            onShouldStartLoadWithRequest={this._onShouldStartLoadWithRequest.bind(this)}
-            />
-          )}
-        
-        {isLoading && <View style={[styles.actInd, {transform: [{ scale: 2 }]}]}>
-          <ActivityIndicator size="large" color="#FFF"/>
-        </View>}
-        
+            onError={() => this.setState({loadFailed: true, isLoading: false})}
+            onLoad={() => this.setState({isLoading: false})}
+            onNavigationStateChange={this._onNavigationStateChange.bind(this)}
+            onShouldStartLoadWithRequest={this._onShouldStartLoadWithRequest.bind(
+              this,
+            )}
+          />
+        )}
+
+        {isLoading && (
+          <View style={[styles.actInd, {transform: [{scale: 2}]}]}>
+            <ActivityIndicator size="large" color="#FFF" />
+          </View>
+        )}
+
         {loadFailed && (
           <View style={styles.failView}>
-          <Image source={require('./img_src/logo_ucs.png')} style={{ width: 200, resizeMode: "contain" }}/>
+            <Image
+              source={require('./img_src/logo_ucs.png')}
+              style={{width: 200, resizeMode: 'contain'}}
+            />
 
             <Text style={styles.text}>
               O carregamento da página falhou, por favor, verifique sua conexão
@@ -57,10 +122,11 @@ class MyWebComponent extends Component {
 
             <TouchableOpacity
               style={styles.button}
-              onPress={() => this.setState({ loadFailed: false, isLoading: true })}>
+              onPress={() =>
+                this.setState({loadFailed: false, isLoading: true})
+              }>
               <Text>Recarregar</Text>
             </TouchableOpacity>
-          
           </View>
         )}
       </>
@@ -74,7 +140,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#EEE'
+    backgroundColor: '#EEE',
   },
   button: {
     alignItems: 'center',
@@ -87,7 +153,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     paddingBottom: 20,
-    color: 'black'
+    color: 'black',
   },
   actInd: {
     position: 'absolute',
@@ -98,7 +164,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-  }
+  },
 });
 
 export default MyWebComponent;
