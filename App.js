@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {WebView} from 'react-native-webview';
 import {Text, View, TouchableOpacity, StyleSheet, Image, ActivityIndicator, ToastAndroid } from 'react-native';
+var SendIntentAndroid = require('react-native-send-intent');
 
 class MyWebComponent extends Component {
   constructor(props) {
@@ -10,6 +11,15 @@ class MyWebComponent extends Component {
       loadFailed: false,
       isLoading: true,
     };
+  }
+
+  _onShouldStartLoadWithRequest = (event) => {
+    const { url } = event;
+    if (url.startsWith('intent://') && url.includes('scheme=http') && Platform.OS === 'android') {
+      SendIntentAndroid.openChromeIntent(url);
+      return false;
+    }
+    return true;
   }
 
   componentDidMount(){
@@ -28,6 +38,7 @@ class MyWebComponent extends Component {
             source={{uri: 'https://ava.ucs.br/'}}
             onError={() => this.setState({ loadFailed: true, isLoading: false })}
             onLoad={() => this.setState({ isLoading: false })}
+            onShouldStartLoadWithRequest={this._onShouldStartLoadWithRequest.bind(this)}
             />
           )}
         

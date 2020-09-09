@@ -12,6 +12,7 @@
   "dependencies": {
     "react": "16.13.1",
     "react-native": "0.63.2",
+    "react-native-send-intent": "^1.2.2",
     "react-native-splash-screen": "^3.2.0",
     "react-native-webview": "^10.8.3"
   },
