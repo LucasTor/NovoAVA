@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import {WebView} from 'react-native-webview';
+import { WebView } from 'react-native-webview';
+import SendIntentAndroid from 'react-native-send-intent';
 import {
   Text,
   View,
@@ -11,7 +12,6 @@ import {
   Alert,
   BackHandler,
 } from 'react-native';
-var SendIntentAndroid = require('react-native-send-intent');
 
 class MyWebComponent extends Component {
   constructor(props) {
@@ -125,7 +125,7 @@ class MyWebComponent extends Component {
               onPress={() =>
                 this.setState({loadFailed: false, isLoading: true})
               }>
-              <Text>Recarregar</Text>
+              <Text>RECARREGAR</Text>
             </TouchableOpacity>
           </View>
         )}
